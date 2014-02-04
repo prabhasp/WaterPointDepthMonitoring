@@ -1,4 +1,4 @@
-g<link href="http://kevinburke.bitbucket.org/markdowncss/markdown.css" rel="stylesheet"></link>
+<link href="http://kevinburke.bitbucket.org/markdowncss/markdown.css" rel="stylesheet"></link>
 
 Well Depth Monitoring
 ========================================================
@@ -32,7 +32,7 @@ ggplot(depths_with_well_info,
 ```
 
 
-```{r, echo=F, eval=F}
+```{r echo=F, eval=F}
 # Try and generate a contour plot -- attempt 1; geoR
 require(geoR, quietly=T)
 xyz <- with(depths_with_well_info,
@@ -66,7 +66,7 @@ ggplot(pred_mat, aes(x=xv, y=yv)) + stat_contour(aes(z=predicted.mean)) +
 # Contour plots by Month
 Note: the following graphs use  [Spline Interpolation](http://en.wikipedia.org/wiki/Spline_interpolation), particularly the [Akima Spline](http://www.alglib.net/interpolation/spline3.php)
 
-```{r}
+```{r contours, cache=T}
 require(akima, quietly=T); require(lubridate, quietly=T); require(RColorBrewer, quietly=T)
 depths_with_well_info$month <- round_date(depths_with_well_info$date_recording, 'month')
 d_ply(depths_with_well_info, .(month), function(df) {
