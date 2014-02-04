@@ -70,7 +70,7 @@ Note: the following graphs use  [Spline Interpolation](http://en.wikipedia.org/w
 require(akima, quietly=T); require(lubridate, quietly=T); require(RColorBrewer, quietly=T)
 depths_with_well_info$month <- round_date(depths_with_well_info$date_recording, 'month')
 d_ply(depths_with_well_info, .(month), function(df) {
-    if(nrow(df) > 5) {
+    if(nrow(df) > 4) { # akima interpolation requires 4 points minimum
         print(unique(df$month))
         xyz <- with(df,
             data.frame(x=location_source._geopoint_source_longitude, 
@@ -80,6 +80,7 @@ d_ply(depths_with_well_info, .(month), function(df) {
         xyzi <- interp(xyz$x, xyz$y, xyz$z, duplicate='mean')
         image(xyzi, col=rev(brewer.pal(9, name="YlGn")))
         contour(xyzi, add=TRUE)
+        points(xyz, pch=19)
         title(main=unique(df$month)[1])
     }
 })
