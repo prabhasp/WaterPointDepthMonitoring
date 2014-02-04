@@ -1,4 +1,4 @@
-<link href="http://kevinburke.bitbucket.org/markdowncss/markdown.css" rel="stylesheet"></link>
+g<link href="http://kevinburke.bitbucket.org/markdowncss/markdown.css" rel="stylesheet"></link>
 
 Well Depth Monitoring
 ========================================================
@@ -16,16 +16,16 @@ depths_with_well_info$ReducedWaterLevel <- with(depths_with_well_info,
 ggplot(depths_with_well_info, 
        aes(x=date_recording, y=ReducedWaterLevel, color=Well_ID)) +
     geom_line() + 
-    labs(x="Date of recording", y="Water level in meters", color="Name of well owner",
+    labs(x="Date of recording", y="Water level in meters", color="Well ID",
          title="Water levels over time")
-ggsave("WaterLevelsOverTime.png")
+# ggsave("WaterLevelsOverTime.png")
 
 ggplot(depths_with_well_info, 
        aes(x=resource.measurements_wd, y=ReducedWaterLevel, color=Well_ID)) +
     geom_jitter() +
-    labs(x="Well depth in meters", y="Water level in meters", color="Well_ID",
+    labs(x="Well depth in meters", y="Water level in meters", color="Well ID",
          title="Water level vs. well depth")
-ggsave("WellDepthVsWaterLevels.png")
+# ggsave("WellDepthVsWaterLevels.png")
 
 #ggplot(depths_with_well_info,
 #       aes(x=location_source._geopoint_source_longitude, y=location_source._geopoint_sourc#e_latitude, color=ReducedWaterLevel)) + geom_jitter()
