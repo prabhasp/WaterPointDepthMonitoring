@@ -1,0 +1,86 @@
+<link href="http://kevinburke.bitbucket.org/markdowncss/markdown.css" rel="stylesheet"></link>
+
+Well Depth Monitoring
+========================================================
+
+```{r fig.width=7, fig.height=6, warning=F, message=F}
+require(formhub, quietly=T); require(ggplot2, quietly=T)
+wells <- formhubRead("~/Downloads/well_Inventory_ver_0_4_2014_01_17_14_53_10.csv", 
+                     "~/Downloads/well_Inventory_ver_0_4.json", keepGroupNames=F)
+depths <- formhubRead("~/Downloads/ob_well_data_1_2014_01_17_14_52_14.csv",
+                      "~/Downloads/ob_well_data_1.json", keepGroupNames=F)
+depths_with_well_info <- merge(wells, depths, by="Well_ID")
+depths_with_well_info$ReducedWaterLevel <- with(depths_with_well_info,
+    location_source._geopoint_source_altitude - waterlevel.swl)
+
+ggplot(depths_with_well_info, 
+       aes(x=date_recording, y=ReducedWaterLevel, color=Well_ID)) +
+    geom_line() + 
+    labs(x="Date of recording", y="Water level in meters", color="Name of well owner",
+         title="Water levels over time")
+ggsave("WaterLevelsOverTime.png")
+
+ggplot(depths_with_well_info, 
+       aes(x=resource.measurements_wd, y=ReducedWaterLevel, color=Well_ID)) +
+    geom_jitter() +
+    labs(x="Well depth in meters", y="Water level in meters", color="Well_ID",
+         title="Water level vs. well depth")
+ggsave("WellDepthVsWaterLevels.png")
+
+#ggplot(depths_with_well_info,
+#       aes(x=location_source._geopoint_source_longitude, y=location_source._geopoint_sourc#e_latitude, color=ReducedWaterLevel)) + geom_jitter()
+```
+
+
+```{r, echo=F, eval=F}
+# Try and generate a contour plot -- attempt 1; geoR
+require(geoR, quietly=T)
+xyz <- with(depths_with_well_info,
+            data.frame(x=location_source._geopoint_source_longitude, 
+                       y=location_source._geopoint_source_latitude, 
+                       z=ReducedWaterLevel))
+
+# randomly spread the points out JUST a bit
+xyz$x <- xyz$x + rnorm(nrow(xyz), 0, .0003)
+xyz$y <- xyz$y + rnorm(nrow(xyz), 0, .0003)
+ggplot(xyz, aes(x=x, y=y, z=z)) + geom_point()
+
+x=seq(from = min(xyz$x), to = max(xyz$x), by = .001)
+y=seq(from = min(xyz$y), to = max(xyz$y), by = .001)
+xv <- rep(x,length(y))
+yv <- rep(y, each=length(x))
+in_mat <- as.matrix(cbind(xv,yv))
+
+xyz_geo <- as.geodata(xyz)
+q <- ksline(xyz_geo,cov.model="exp",cov.pars=c(10,3.33), locations=in_mat)
+
+pred_mat <- as.data.frame(in_mat)
+pred_mat$predicted.mean <- q$predict
+pred_mat$predicted.var <- q$krige.var
+ggplot(pred_mat, aes(x=xv, y=yv)) + stat_contour(aes(z=predicted.mean)) +
+    geom_point(data=xyz, aes(x=x, y=y, color=z))
+
+
+```
+
+# Contour plots by Month
+Note: the following graphs use  [Spline Interpolation](http://en.wikipedia.org/wiki/Spline_interpolation), particularly the [Akima Spline](http://www.alglib.net/interpolation/spline3.php)
+
+```{r}
+require(akima, quietly=T); require(lubridate, quietly=T); require(RColorBrewer, quietly=T)
+depths_with_well_info$month <- round_date(depths_with_well_info$date_recording, 'month')
+d_ply(depths_with_well_info, .(month), function(df) {
+    if(nrow(df) > 5) {
+        print(unique(df$month))
+        xyz <- with(df,
+            data.frame(x=location_source._geopoint_source_longitude, 
+                       y=location_source._geopoint_source_latitude, 
+                       z=ReducedWaterLevel))
+    
+        xyzi <- interp(xyz$x, xyz$y, xyz$z, duplicate='mean')
+        image(xyzi, col=rev(brewer.pal(9, name="YlGn")))
+        contour(xyzi, add=TRUE)
+        title(main=unique(df$month)[1])
+    }
+})
+```
